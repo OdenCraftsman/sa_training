@@ -1,0 +1,48 @@
+version: '3.8'
+services:
+  rails-api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ./backend:/app
+    ports:
+      - "3001:3000"
+    depends_on:
+      - db
+    environment:
+      - RAILS_ENV=development
+      - DATABASE_URL=postgres://postgres:password@db:5432/mydatabase
+
+
+  react-app:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+      - "5173:5173"
+    environment:
+      NODE_ENV: development
+
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: sa_sales216!
+      POSTGRES_DB: mydatabase
+
+  # 開発時に rails をホットリロードするために使用
+  # ref: https://qiita.com/eichann/items/41932566bdaaec67caa3
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - 6379:6379
+
+volumes:
+  postgres_data:
