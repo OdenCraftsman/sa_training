@@ -20,10 +20,22 @@ default: &default
   # For details on connection pooling, see Rails configuration guide
   # https://guides.rubyonrails.org/configuring.html#database-pooling
   pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
+  host: db
+  port: 5432
+  username: postgres
+  password: password
+
 
 development:
   <<: *default
   database: reminder_api_development
+  # host: <%= ENV["APP_DATABASE_HOST"] %>
+  # database: postgres
+  # username: postgres
+  # password: <%= ENV["APP_DATABASE_PASSWORD"] %>
+  # sslmode: verify-full
+  # sslrootcert: prod-ca-2021.crt
+
 
   # The specified database role being used to connect to postgres.
   # To create additional roles in postgres see `$ createuser --help`.
