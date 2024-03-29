@@ -29,10 +29,10 @@ default: &default
 development:
   <<: *default
   database: reminder_api_development
-  # host: <%= ENV["APP_DATABASE_HOST"] %>
+  # host: <%= ENV["SUPABASE_DB_HOST"] %>
   # database: postgres
   # username: postgres
-  # password: <%= ENV["APP_DATABASE_PASSWORD"] %>
+  # password: <%= ENV["SUPABASE_DB_PASSWORD"] %>
   # sslmode: verify-full
   # sslrootcert: prod-ca-2021.crt
 
@@ -78,24 +78,25 @@ test:
 # Instead, provide the password or a full connection URL as an environment
 # variable when you boot the app. For example:
 #
-#   DATABASE_URL="postgres://myuser:mypass@localhost/somedatabase"
+#   SUPABASE_DB_URL="postgres://myuser:mypass@localhost/somedatabase"
 #
-# If the connection URL is provided in the special DATABASE_URL environment
+# If the connection URL is provided in the special SUPABASE_DB_URL environment
 # variable, Rails will automatically merge its configuration values on top of
 # the values provided in this file. Alternatively, you can specify a connection
 # URL environment variable explicitly:
 #
 #   production:
-#     url: <%= ENV["MY_APP_DATABASE_URL"] %>
+#     url: <%= ENV["MY_APP_SUPABASE_DB_URL"] %>
 #
 # Read https://guides.rubyonrails.org/configuring.html#configuring-a-database
 # for a full overview on how database connection configuration can be specified.
 #
 production:
   <<: *default
-  host: <%= ENV["APP_DATABASE_HOST"] %>
-  database: postgres
-  username: postgres
-  password: <%= ENV["APP_DATABASE_PASSWORD"] %>
+  # url: <%= ENV["SUPABASE_DB_URL"] %>
+  username:  <%= ENV["SUPABASE_DB_USER"] %>
+  password: <%= ENV["SUPABASE_DB_PASSWORD"] %>
+  host: <%= ENV["SUPABASE_DB_HOST"] %>
+  database:  <%= ENV["SUPABASE_DB_NAME"] %>
   sslmode: verify-full
   sslrootcert: prod-ca-2021.crt

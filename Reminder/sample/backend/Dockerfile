@@ -14,5 +14,6 @@ COPY . /app
 
 # 一度だけ実行すると，ホットリロードが有効になる
 RUN rails livereload:install
-
+# ENV RAILS_ENV=production
+# CMD ["rails", "server", "-b", "0.0.0.0", "-e", "production"]
 CMD ["rails", "server", "-b", "0.0.0.0"]

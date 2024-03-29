@@ -12,8 +12,7 @@ services:
       - db
     environment:
       - RAILS_ENV=development
-      - DATABASE_URL=postgres://postgres:password@db:5432/reminder_api_development
-
+    container_name: backend
 
   react-app:
     build:
@@ -27,6 +26,7 @@ services:
       - "5173:5173"
     environment:
       NODE_ENV: development
+    container_name: frontend
 
   db:
     image: postgres:13
@@ -38,6 +38,7 @@ services:
       # POSTGRES_DB: reminder
     ports:
       - "5432:5432"
+    container_name: db
 
   # 開発時に rails をホットリロードするために使用
   # ref: https://qiita.com/eichann/items/41932566bdaaec67caa3
