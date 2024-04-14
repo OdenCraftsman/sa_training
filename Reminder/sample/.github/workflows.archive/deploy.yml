@@ -1,0 +1,39 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # デプロイしたいブランチ名を指定します
+
+env:
+  node-version: '20'
+  # pnpm-version: '8'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.node-version }}
+
+      - name: Install dependencies
+        run: yarn install
+        working-directory: frontend
+
+      - name: Build
+        run: yarn build
+        working-directory: frontend
+        env:
+          VITE_API_URL: "https://aiso-reminder-server-cloudrun-obcs3lfy6a-uc.a.run.app"
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.AISO_PERSONAL_ACCESS_TOKEN }}
+          publish_dir: ./frontend/dist  # ビルド後の静的ファイルが格納されているディレクトリを指定します
+          cname: reminder-aiso.style-arts.com

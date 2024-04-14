@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+husky_directory_path=$(dirname -- "$0")
+. "$husky_directory_path/_/husky.sh"
+. "$husky_directory_path/scripts/protect-default-branch.sh"
+
+npx lint-staged

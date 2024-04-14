@@ -1,0 +1,47 @@
+# TODO: 以下の課題を解決するまで自動マージ機能(このworkflow全て)を無効化する
+# NOTE: 残課題
+# 課題1: workflow_runイベントだと、呼び出したイベント(pull_request)をtriggerしたユーザー情報が上手く取得できない => repository_dispatchでpayloadを与えればいけそう
+# 課題2: chromaticがpendingになっている状態の時は自動マージを止めたい。 => branch protectionに追加してしまうと、関係ないファイルの時にマージができなくなってしまうので、check_suiteのようにciの状態によってjobの起動を分岐させる方法がなさそうだった。github cliを使用して取得してこないといけないかも。(https://mixi-developers.mixi.co.jp/github-action-all-check-ci-cad4d862f137#3f90)
+
+# See: https://docs.github.com/en/code-security/supply-chain-security/keeping-your-dependencies-updated-automatically/automating-dependabot-with-github-actions#enable-auto-merge-on-a-pull-request
+
+name: Dependabot auto-merge
+on:
+  workflow_run:
+    workflows: [Test]
+    types:
+      - completed
+
+permissions:
+  pull-requests: write
+  contents: write
+
+jobs:
+  dependabot:
+    if: ${{ github.event.workflow_run.triggering_actor.type == 'Bot' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dependabot metadata
+        id: metadata
+        uses: dependabot/fetch-metadata@v1.1.1
+        with:
+          github-token: '${{ secrets.GITHUB_TOKEN }}'
+
+      - name: Declare env variable (devDependency minor output)
+        run: echo "IS_DEV_DEPENDENCY_MINOR=${{ steps.metadata.outputs.dependency-type == 'direct:development' && steps.metadata.outputs.update-type == 'version-update:semver-minor' }}" >> $GITHUB_ENV
+
+      - name: Declare env variable (devDependency patch output)
+        run: echo "IS_DEV_DEPENDENCY_PATCH=${{ steps.metadata.outputs.dependency-type == 'direct:development' && steps.metadata.outputs.update-type == 'version-update:semver-patch' }}" >> $GITHUB_ENV
+
+      - name: Enable auto-merge for Dependabot PRs
+        if: ${{ env.IS_DEV_DEPENDENCY_MINOR == 'true' || env.IS_DEV_DEPENDENCY_PATCH == 'true' }}
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{github.event.pull_request.html_url}}
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Approve a PR
+        if: ${{ env.IS_DEV_DEPENDENCY_MINOR == 'true' || env.IS_DEV_DEPENDENCY_PATCH == 'true' }}
+        run: gh pr review --approve "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,55 @@
+version: '3.8'
+services:
+  rails-api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    volumes:
+      - ./server:/app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+      - redis
+    environment:
+      - RAILS_ENV=development
+      # よろしくないが，研修プログラムなので master.key と production.key をコンテナにコピー
+      - ENV RAILS_MASTER_KEY=5d01f68f940aacab021755c094690b03
+      - ENV RAILS_PRODUCTION_KEY=9934277a800cad248585d3ac5a4ad849
+    container_name: server
+
+  react-app:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      NODE_ENV: development
+    container_name: frontend
+
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres.becintbqujhlusyioqsk
+      POSTGRES_PASSWORD: Reminder-Demo-aiso
+      # POSTGRES_DB: reminder
+    ports:
+      - "5432:5432"
+    container_name: db
+
+  # 開発時に rails をホットリロードするために使用
+  # ref: https://qiita.com/eichann/items/41932566bdaaec67caa3
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - 6379:6379
+
+volumes:
+  postgres_data:

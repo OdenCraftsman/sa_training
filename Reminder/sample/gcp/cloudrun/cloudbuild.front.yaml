@@ -1,0 +1,21 @@
+steps:
+  - name: node:20
+    args:
+      - install
+    entrypoint: yarn
+    dir: 'frontend'
+  - name: node:20
+    args:
+      - build
+    entrypoint: yarn
+    dir: 'frontend'
+    env:
+      - 'VITE_API_URL=https://aiso-reminder-server-cloudrun-obcs3lfy6a-uc.a.run.app/'
+  - name: google/cloud-sdk
+    args:
+      - '-c'
+      - |
+        gsutil rsync -d -r dist gs://school-reminder-web-aiso
+    entrypoint: bash
+    dir: 'frontend'
+logsBucket: 'tech-school/reminder/front-aiso'

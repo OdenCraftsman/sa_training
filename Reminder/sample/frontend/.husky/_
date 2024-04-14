@@ -1,0 +1,27 @@
+#!/bin/sh
+# husky
+
+# Hook created by Husky
+#   Version: 7.0.4
+#   At: 9/24/2021, 3:24:09 PM
+#   See: https://github.com/typicode/husky#readme
+
+# From
+#   Directory: /Users/username/project/frontend
+#   Homepage: https://github.com/typicode/husky#readme
+
+# Common
+command_exists () {
+  command -v "$1" >/dev/null 2>&1
+}
+
+# Load _/husky.sh
+export HUSKY_GIT_PARAMS="$*"
+if [ -f "$PWD/.husky/_/husky.sh" ]; then
+  . "$PWD/.husky/_/husky.sh"
+elif command_exists node && [ -f "$PWD/node_modules/husky/lib/bin.js" ]; then
+  node "$PWD/node_modules/husky/lib/bin.js" "$0" "$@"
+else
+  echo "husky - Git hooks failed to install"
+  exit 1
+fi

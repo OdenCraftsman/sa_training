@@ -1,0 +1,30 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - '-t'
+      # - 'gcr.io/$PROJECT_ID/aiso-sample-todo-app:$COMMIT_SHA'
+      - 'gcr.io/tech-welfare/aiso-sample-todo-app:$COMMIT_SHA'
+      - '-f'
+      - './server/Dockerfile.prod'
+      - ./server
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - 'gcr.io/tech-welfare/aiso-sample-todo-app:$COMMIT_SHA'
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    args:
+      - run
+      - deploy
+      - aiso-reminder-server-cloudrun
+      - '--image'
+      - 'gcr.io/tech-welfare/aiso-sample-todo-app:$COMMIT_SHA'
+      - '--region'
+      - us-central1
+      - '--update-env-vars'
+      - 'RAILS_MASTER_KEY=9934277a800cad248585d3ac5a4ad849'
+      - '--allow-unauthenticated'
+    entrypoint: gcloud
+images:
+  - 'gcr.io/tech-welfare/aiso-sample-todo-app:$COMMIT_SHA'
+logsBucket: 'tech-school/reminder/server-aiso'
