@@ -1,0 +1,121 @@
+name: Deploy Staging
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'main'
+
+env:
+  node-version: '18'
+  pnpm-version: '8'
+
+# See: https://docs.github.com/en/actions/using-jobs/using-concurrency#example-only-cancel-in-progress-jobs-or-runs-for-the-current-workflow
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  notify-started:
+    name: Send to Slack on Started
+    uses: buysell-technologies/stock-release-slack-notify/.github/workflows/notify-slack.yml@main
+    with:
+      message: 【FE】🏃💨 デプロイ開始
+      repository_name: ${{ github.repository }}
+      run_id: ${{ github.run_id }}
+      author: ${{ github.event.sender.login }}
+      environment: Staging
+      reference_name: ${{ github.ref_name }}
+    secrets:
+      webhook_url: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+
+  deploy:
+    needs: notify-started
+    if: ${{ ! failure() }}
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://stg.stock.buysell-cosmos.com
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.pnpm-version }}
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: ${{ env.node-version }}
+          cache: 'pnpm'
+
+      - uses: actions/cache@v3
+        id: pnpm-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles(format('{0}{1}', github.workspace, '/pnpm-lock.yaml')) }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        if: steps.pnpm-cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile --prefer-offline
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Authenticate to Google Cloud
+        uses: 'google-github-actions/auth@v1'
+        with:
+          access_token_lifetime: 600s
+          workload_identity_provider: projects/713011784377/locations/global/workloadIdentityPools/github-actions-deploy/providers/github-actions
+          service_account: frontend-deploy@stock-staging-380704.iam.gserviceaccount.com
+
+      - uses: google-github-actions/setup-gcloud@v1
+
+      - name: Run pnpm build
+        run: >-
+          VITE_API_URL="https://stg.gateway.api.buysell-cosmos.com/stock"
+          VITE_AUTH0_REDIRECT_URI="https://stg.stock.buysell-cosmos.com"
+          VITE_SENTRY_DSN="https://460e3d4541ed45589df1893ba9ac40ef@o162746.ingest.sentry.io/4505360990666752"
+          VITE_AUTH0_DOMAIN="cosmos-staging.jp.auth0.com"
+          VITE_AUTH0_CLIENT_ID="K22l1ONCfINWkbBblPsRwKXnNdXqZPsw"
+          VITE_PRINT_FORMAT_ARCHIVE_URL="https://storage.googleapis.com/smapri-designer-format-stg/fournine/store.spfmtz"
+          SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
+          pnpm build --mode staging
+
+      - name: Deploy to Cloud Storage
+        run: gsutil -m rsync -d -r dist gs://stock-web-stg
+
+  notify-succeeded:
+    needs: deploy
+    name: Send to Slack on Succeeded
+    if: ${{ success() }}
+    uses: buysell-technologies/stock-release-slack-notify/.github/workflows/notify-slack.yml@main
+    with:
+      message: 【FE】✅ デプロイ成功
+      repository_name: ${{ github.repository }}
+      run_id: ${{ github.run_id }}
+      author: ${{ github.event.sender.login }}
+      environment: Staging
+      reference_name: ${{ github.ref_name }}
+    secrets:
+      webhook_url: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+
+  notify-failed:
+    needs: deploy
+    name: Send to Slack on Failure
+    if: ${{ failure() }}
+    uses: buysell-technologies/stock-release-slack-notify/.github/workflows/notify-slack.yml@main
+    with:
+      message: 【FE】❌ デプロイ失敗
+      repository_name: ${{ github.repository }}
+      run_id: ${{ github.run_id }}
+      author: ${{ github.event.sender.login }}
+      environment: Staging
+      reference_name: ${{ github.ref_name }}
+    secrets:
+      webhook_url: ${{ secrets.DEPLOY_WEBHOOK_URL }}

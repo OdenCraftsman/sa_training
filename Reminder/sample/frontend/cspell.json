@@ -1,0 +1,18 @@
+{
+  "version": "0.2",
+  "language": "ja",
+  "ignorePaths": ["src/generate/**/*"],
+  "words": [
+    "hookform",
+    "localstorage",
+    "notistack",
+    "tanstack",
+    "typesafe",
+    "typeutils",
+    "unreviewed",
+    "Usecase",
+    "serverity"
+  ],
+  "flagWords": [],
+  "ignoreRegExpList": ["[０-９Ａ-Ｚａ-ｚぁ-んァ-ヶ亜-熙纊-黑]+"]
+}

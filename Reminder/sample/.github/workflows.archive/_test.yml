@@ -1,0 +1,205 @@
+name: Test
+
+on:
+  workflow_call:
+
+env:
+  node-version: '18'
+  pnpm-version: '8'
+  chromatic-ignore-dir: 'src/routes/**/*'
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.pnpm-version }}
+
+      - uses: actions/setup-node@v3.7.0
+        with:
+          node-version: ${{ env.node-version }}
+          cache: 'pnpm'
+
+      - uses: actions/cache@v3
+        id: pnpm-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles(format('{0}{1}', github.workspace, '/pnpm-lock.yaml')) }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Install dependencies
+        if: steps.pnpm-cache.outputs.cache-hit != 'true'
+        run: pnpm install --frozen-lockfile --prefer-offline
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  chromatic:
+    # NOTE: dependabotの自動マージでスナップショットが撮られすぎてしまうので、dependabotの時はpull_requestのopened時のみchromaticを動かすようにする
+    if: ${{ github.actor != 'dependabot[bot]' || (github.event_name == 'pull_request' && github.event.action == 'opened') }}
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.pnpm-version }}
+
+      - uses: actions/setup-node@v3.7.0
+        with:
+          node-version: ${{ env.node-version }}
+          cache: 'pnpm'
+
+      - uses: actions/cache@v3
+        id: pnpm-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles(format('{0}{1}', github.workspace, '/pnpm-lock.yaml')) }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - uses: technote-space/get-diff-action@v6
+        id: check-diff
+        with:
+          PATTERNS: |
+            ${{ env.chromatic-ignore-dir }}.+(ts|tsx)
+
+      - name: Publish to Chromatic
+        uses: chromaui/action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          onlyChanged: true
+          exitZeroOnChanges: true
+          traceChanged: true
+          # FIXME: routesの依存関係のパンクズリストにより、差分が余分に検出されてしまうために以下の untraced を設定している
+          untraced: ${{ (!steps.check-diff.outputs.diff && env.chromatic-ignore-dir) || '' }}
+          # NOTE: ThemeProviderに変更が入った場合は全てのスナップショットを更新する
+          externals: 'src/providers/GlobalUtilityProvider/ThemeProvider/*'
+
+  lint:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.pnpm-version }}
+
+      - uses: actions/setup-node@v3.7.0
+        with:
+          node-version: ${{ env.node-version }}
+          cache: 'pnpm'
+
+      - uses: actions/cache@v3
+        id: pnpm-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles(format('{0}{1}', github.workspace, '/pnpm-lock.yaml')) }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Run spellchecker
+        run: pnpm spellcheck
+
+      - name: Run linter
+        run: pnpm lint
+
+      - name: Run formatter
+        run: pnpm fmt
+
+  typecheck:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.pnpm-version }}
+
+      - uses: actions/setup-node@v3.7.0
+        with:
+          node-version: ${{ env.node-version }}
+          cache: 'pnpm'
+
+      - uses: actions/cache@v3
+        id: pnpm-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles(format('{0}{1}', github.workspace, '/pnpm-lock.yaml')) }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Run tsc
+        run: pnpm typecheck
+
+  unit-test:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.pnpm-version }}
+
+      - uses: actions/setup-node@v3.7.0
+        with:
+          node-version: ${{ env.node-version }}
+          cache: 'pnpm'
+
+      - uses: actions/cache@v3
+        id: pnpm-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles(format('{0}{1}', github.workspace, '/pnpm-lock.yaml')) }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Run vitest
+        run: pnpm test
+
+      - name: Run vitest typecheck
+        run: pnpm test:typecheck
+
+  build:
+    needs: setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ${{ env.pnpm-version }}
+
+      - uses: actions/setup-node@v3.7.0
+        with:
+          node-version: ${{ env.node-version }}
+          cache: 'pnpm'
+
+      - uses: actions/cache@v3
+        id: pnpm-cache
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-pnpm-${{ hashFiles(format('{0}{1}', github.workspace, '/pnpm-lock.yaml')) }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
+
+      - name: Run build
+        run: pnpm build

@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+
+husky_directory_path=$(dirname -- "$0")
+. "$husky_directory_path/_/husky.sh"
+. "$husky_directory_path/scripts/protect-default-branch.sh"
+
+pids=()
+# すべてのチェックに成功しないとgit pushできないようにする
+commands=(
+  "pnpm lint"
+  "pnpm fmt"
+  "pnpm typecheck"
+  "pnpm spellcheck"
+)
+
+for command in "${commands[@]}"; do
+  ${command} &
+  pids+=($!)
+done
+
+for pid in ${pids[@]}; do
+  wait $pid
+  if [ $? -ne 0 ]; then
+    exit 1
+  fi
+done
+

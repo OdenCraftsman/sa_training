@@ -1,0 +1,19 @@
+# ビルドステージ
+FROM ruby:3.2 AS builder
+RUN apt-get update -qq
+WORKDIR /app
+COPY Gemfile /app/Gemfile
+COPY Gemfile.lock /app/Gemfile.lock
+RUN bundle install
+COPY . /app
+
+# プロダクションステージ
+FROM ruby:3.2
+COPY --from=builder /app /app
+COPY --from=builder /usr/local/bundle /usr/local/bundle
+WORKDIR /app
+
+# よろしくないが，研修プログラムなので production.key をコンテナにコピー
+ENV RAILS_MASTER_KEY=9934277a800cad248585d3ac5a4ad849
+
+CMD ["rails", "server", "-b", "0.0.0.0", "-e", "production"]

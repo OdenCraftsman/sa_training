@@ -4,66 +4,105 @@
   "version": "0.0.0",
   "type": "module",
   "engines": {
-    "node": "20.x",
-    "pnpm": "Please use yarn!",
-    "npm": "Please use yarn!"
+    "node": "18.x",
+    "npm": "please use yarn!"
   },
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "dev": "vite --mode development",
+    "build": "tsc && vite build --mode production",
+    "preview": "vite preview",
+    "prepare": "husky install .husky",
+    "postpublish": "pinst --disable",
+    "prepublishOnly": "pinst --enable",
+    "fix": "run-p *:fix",
+    "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
+    "lint:fix": "eslint --fix 'src/**/*.{js,jsx,ts,tsx}'",
+    "fmt": "prettier --check 'src/**/*.{js,jsx,ts,tsx,html,json}'",
+    "fmt:fix": "prettier --write 'src/**/*.{js,jsx,ts,tsx,html,json}'",
+    "typecheck": "tsc",
+    "spellcheck": "cspell 'src/**/*.{js,jsx,ts,tsx,html,json}' --no-progress",
+    "preinstall": "npx typesync || :",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "test": "vitest run",
+    "test:typecheck": "vitest typecheck",
+    "test:watch": "vitest watch",
+    "test:coverage": "vitest run --coverage",
+    "scaffold:fc": "hygen fc new",
+    "scaffold:hooks": "hygen hooks new",
+    "scaffold:provider": "hygen provider new"
   },
   "dependencies": {
+    "@emotion/react": "^11.11.1",
+    "@emotion/styled": "^11.11.0",
+    "@fontsource/roboto": "^5.0.8",
+    "@hookform/resolvers": "^3.3.1",
+    "@mui/icons-material": "^5.14.11",
+    "@mui/lab": "5.0.0-alpha.146",
+    "@mui/material": "^5.14.11",
+    "@mui/x-date-pickers": "^6.16.0",
+    "@tanstack/react-query": "^5.28.9",
+    "@tanstack/react-query-devtools": "^4.35.7",
+    "axios": "^1.6.8",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "react-hook-form": "^7.47.0",
+    "react-router-dom": "^6.16.0",
+    "zod": "^3.22.2"
   },
   "devDependencies": {
+    "@commitlint/cli": "^17.7.2",
+    "@commitlint/config-conventional": "^17.7.0",
+    "@hookform/devtools": "^4.3.1",
+    "@storybook/addon-actions": "^7.4.5",
+    "@storybook/addon-essentials": "^7.4.5",
+    "@storybook/addon-interactions": "^7.4.5",
+    "@storybook/addon-links": "^7.4.5",
+    "@storybook/addon-mdx-gfm": "^7.4.5",
+    "@storybook/react": "^7.4.5",
+    "@storybook/react-vite": "^7.4.5",
+    "@storybook/testing-library": "^0.2.2",
+    "@testing-library/react": "^14.0.0",
+    "@types/eslint": "^8.44.3",
+    "@types/eslint-config-prettier": "^6.11.1",
+    "@types/lint-staged": "^13.2.0",
+    "@types/prop-types": "^15.7.8",
     "@types/react": "^18.2.64",
     "@types/react-dom": "^18.2.21",
+    "@types/react-router-dom": "^5.3.3",
     "@typescript-eslint/eslint-plugin": "^7.1.1",
     "@typescript-eslint/parser": "^7.1.1",
-    "eslint": "^8.57.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
     "@vitejs/plugin-react": "^4.2.1",
+    "@vitejs/plugin-react-swc": "^3.4.0",
+    "cspell": "^7.3.7",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.0.0",
+    "eslint-config-standard-with-typescript": "^39.1.0",
+    "eslint-plugin-import": "^2.28.1",
+    "eslint-plugin-jsx-a11y": "^6.7.1",
+    "eslint-plugin-n": "^16.1.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",
+    "eslint-plugin-storybook": "^0.6.14",
+    "happy-dom": "^12.6.0",
+    "husky": "^9.0.11",
+    "hygen": "^6.2.11",
+    "lint-staged": "^14.0.1",
+    "mockdate": "^3.0.5",
+    "npm-run-all": "^4.1.5",
+    "pinst": "^3.0.0",
+    "prettier": "^3.0.3",
+    "prop-types": "^15.8.1",
+    "storybook": "^7.4.5",
+    "storybook-addon-react-router-v6": "^2.0.7",
+    "type-fest": "^4.3.3",
     "typescript": "^5.2.2",
-    "vite": "^5.1.6"
-  },
-  "eslintConfig": {
-    "extends": [
-      "eslint:recommended",
-      "plugin:react/recommended",
-      "plugin:@typescript-eslint/recommended",
-      "plugin:react-hooks/recommended",
-      "prettier"
-    ],
-    "parser": "@typescript-eslint/parser",
-    "parserOptions": {
-      "ecmaFeatures": {
-        "jsx": true
-      },
-      "ecmaVersion": 2020,
-      "sourceType": "module"
-    },
-    "plugins": ["@typescript-eslint", "react", "react-hooks"],
-    "rules": {
-      "react/react-in-jsx-scope": "off"
-    },
-    "settings": {
-      "react": {
-        "version": "detect"
-      }
-    }
-  },
-
-  "prettier": {
-    "semi": true,
-    "singleQuote": true,
-    "printWidth": 80,
-    "tabWidth": 2,
-    "trailingComma": "none",
-    "jsxBracketSameLine": false
+    "vite": "^5.1.6",
+    "vite-plugin-inspect": "^0.7.40",
+    "vite-plugin-turbosnap": "^1.0.3",
+    "vite-tsconfig-paths": "^4.3.2",
+    "vitest": "^0.34.6"
   }
-
 }

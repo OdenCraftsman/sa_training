@@ -2,17 +2,21 @@ version: '3.8'
 services:
   rails-api:
     build:
-      context: ./backend
+      context: ./server
       dockerfile: Dockerfile
     volumes:
-      - ./backend:/app
+      - ./server:/app
     ports:
-      - "3001:3000"
+      - "3000:3000"
     depends_on:
       - db
+      - redis
     environment:
       - RAILS_ENV=development
-    container_name: backend
+      # よろしくないが，研修プログラムなので master.key と production.key をコンテナにコピー
+      - ENV RAILS_MASTER_KEY=5d01f68f940aacab021755c094690b03
+      - ENV RAILS_PRODUCTION_KEY=9934277a800cad248585d3ac5a4ad849
+    container_name: server
 
   react-app:
     build:
@@ -22,7 +26,6 @@ services:
       - ./frontend:/app
       - /app/node_modules
     ports:
-      - "3000:3000"
       - "5173:5173"
     environment:
       NODE_ENV: development
@@ -32,9 +35,9 @@ services:
     image: postgres:13
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    # environment:
-      # POSTGRES_USER: postgres
-      # POSTGRES_PASSWORD: sa_sales216!
+    environment:
+      POSTGRES_USER: postgres.becintbqujhlusyioqsk
+      POSTGRES_PASSWORD: Reminder-Demo-aiso
       # POSTGRES_DB: reminder
     ports:
       - "5432:5432"

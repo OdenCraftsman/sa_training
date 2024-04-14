@@ -40,7 +40,7 @@ Artifact Registry API も有効にしてください。
 3. ビルドしたイメージを Cloud Run にデプロイします。
 
     ```bash
-    gcloud run deploy aiso-rails-todo-app --image gcr.io/プロジェクトID/aiso-sample-todo-app --platform managed
+    gcloud run deploy aiso-rails-todo-app --image gcr.io/tech-welfare/aiso-sample-todo-app --platform managed
     ```
 
 ## ステップ 2: React アプリケーションをビルドして GCS にアップロード
